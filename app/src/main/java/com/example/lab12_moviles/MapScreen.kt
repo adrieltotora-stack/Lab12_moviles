@@ -36,14 +36,9 @@ import androidx.core.content.ContextCompat
 import com.google.android.gms.maps.model.BitmapDescriptor
 import androidx.compose.ui.platform.LocalContext
 
-fun bitmapDescriptorFromVector(context: Context, vectorResId: Int): BitmapDescriptor? {
-    return ContextCompat.getDrawable(context, vectorResId)?.run {
-        setBounds(0, 0, intrinsicWidth, intrinsicHeight)
-        val bitmap = Bitmap.createBitmap(intrinsicWidth, intrinsicHeight, Bitmap.Config.ARGB_8888)
-        draw(android.graphics.Canvas(bitmap))
-        BitmapDescriptorFactory.fromBitmap(bitmap)
-    }
-}
+import com.google.android.gms.maps.model.Dash
+import com.google.android.gms.maps.model.Gap
+import com.google.android.gms.maps.model.Dot
 
 fun bitmapDescriptorFromImage(context: Context, resId: Int, width: Int, height: Int): BitmapDescriptor? {
     val drawable = ContextCompat.getDrawable(context, resId) ?: return null
@@ -57,7 +52,7 @@ fun bitmapDescriptorFromImage(context: Context, resId: Int, width: Int, height: 
 @Composable
 fun MapScreen() {
     val context = LocalContext.current
-    val ArequipaLocation = LatLng(-16.4040102, -71.559611) // Arequipa, Perú
+    val ArequipaLocation = LatLng(-16.4040102, -71.559611)
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(ArequipaLocation, 12f)
     }
@@ -72,48 +67,34 @@ fun MapScreen() {
     }
 
     val locations = listOf(
-        LatLng(-16.433415,-71.5442652), // JLByR
-        LatLng(-16.4205151,-71.4945209), // Paucarpata
-        LatLng(-16.3524187,-71.5675994) // Zamacola
+        LatLng(-16.433415,-71.5442652),
+        LatLng(-16.4205151,-71.4945209),
+        LatLng(-16.3524187,-71.5675994)
     )
 
     val mallAventuraPolygon = listOf(
-        LatLng(-16.432292, -71.509145),
-        LatLng(-16.432757, -71.509626),
-        LatLng(-16.433013, -71.509310),
-        LatLng(-16.432566, -71.508853)
+        LatLng(-16.432292, -71.509145), LatLng(-16.432757, -71.509626),
+        LatLng(-16.433013, -71.509310), LatLng(-16.432566, -71.508853)
     )
     val parqueLambramaniPolygon = listOf(
-        LatLng(-16.422704, -71.530830),
-        LatLng(-16.422920, -71.531340),
-        LatLng(-16.423264, -71.531110),
-        LatLng(-16.423050, -71.530600)
+        LatLng(-16.422704, -71.530830), LatLng(-16.422920, -71.531340),
+        LatLng(-16.423264, -71.531110), LatLng(-16.423050, -71.530600)
     )
     val plazaDeArmasPolygon = listOf(
-        LatLng(-16.398866, -71.536961),
-        LatLng(-16.398744, -71.536529),
-        LatLng(-16.399178, -71.536289),
-        LatLng(-16.399299, -71.536721)
+        LatLng(-16.398866, -71.536961), LatLng(-16.398744, -71.536529),
+        LatLng(-16.399178, -71.536289), LatLng(-16.399299, -71.536721)
     )
 
-    val plazaDeArmasToMallAventura = listOf(
-        LatLng(-16.398866, -71.536961),
-        LatLng(-16.432292, -71.509145)
-    )
+    val route1 = listOf(LatLng(-16.398866, -71.536961), LatLng(-16.432292, -71.509145))
+    val pattern = listOf(Dot(), Gap(20f), Dash(30f), Gap(20f))
 
     Box(modifier = Modifier.fillMaxSize()) {
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = cameraPositionState,
-            properties = MapProperties(
-                mapType = mapType,
-                isMyLocationEnabled = true
-            ),
-            uiSettings = MapUiSettings(
-                myLocationButtonEnabled = true
-            )
+            properties = MapProperties(mapType = mapType, isMyLocationEnabled = true),
+            uiSettings = MapUiSettings(myLocationButtonEnabled = true)
         ) {
-
             Marker(
                 state = rememberMarkerState(position = ArequipaLocation),
                 icon = bitmapDescriptorFromImage(context, R.drawable.arequipa_escudo, 150, 150),
@@ -121,59 +102,31 @@ fun MapScreen() {
             )
 
             locations.forEach { location ->
-                Marker(
-                    state = rememberMarkerState(position = location),
-                    title = "Ubicación",
-                    snippet = "Punto de interés"
-                )
+                Marker(state = rememberMarkerState(position = location), title = "Ubicación")
             }
 
-            Polygon(
-                points = plazaDeArmasPolygon,
-                strokeColor = Color.Red,
-                fillColor = Color.Blue.copy(alpha = 0.5f),
-                strokeWidth = 5f
-            )
-            Polygon(
-                points = parqueLambramaniPolygon,
-                strokeColor = Color.Red,
-                fillColor = Color.Blue.copy(alpha = 0.5f),
-                strokeWidth = 5f
-            )
-            Polygon(
-                points = mallAventuraPolygon,
-                strokeColor = Color.Red,
-                fillColor = Color.Blue.copy(alpha = 0.5f),
-                strokeWidth = 5f
-            )
+            Polygon(points = plazaDeArmasPolygon, strokeColor = Color.Red, fillColor = Color.Blue.copy(alpha = 0.5f))
+            Polygon(points = parqueLambramaniPolygon, strokeColor = Color.Red, fillColor = Color.Blue.copy(alpha = 0.5f))
+            Polygon(points = mallAventuraPolygon, strokeColor = Color.Red, fillColor = Color.Blue.copy(alpha = 0.5f))
 
+            Polyline(points = route1, color = Color.Magenta, width = 10f)
+            Polyline(points = locations, color = Color.Blue, width = 8f, geodesic = true)
             Polyline(
-                points = plazaDeArmasToMallAventura,
-                color = Color.Magenta,
-                width = 10f
+                points = listOf(ArequipaLocation, LatLng(-16.3524187, -71.5675994)),
+                color = Color.DarkGray,
+                width = 5f,
+                pattern = pattern
             )
         }
 
-        Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .align(androidx.compose.ui.Alignment.TopStart)
-        ) {
+        Column(modifier = Modifier.padding(16.dp).align(androidx.compose.ui.Alignment.TopStart)) {
             Row {
-                Button(onClick = { mapType = MapType.NORMAL }, modifier = Modifier.padding(2.dp)) {
-                    Text("Normal")
-                }
-                Button(onClick = { mapType = MapType.SATELLITE }, modifier = Modifier.padding(2.dp)) {
-                    Text("Satélite")
-                }
+                Button(onClick = { mapType = MapType.NORMAL }, modifier = Modifier.padding(2.dp)) { Text("Normal") }
+                Button(onClick = { mapType = MapType.SATELLITE }, modifier = Modifier.padding(2.dp)) { Text("Satélite") }
             }
             Row {
-                Button(onClick = { mapType = MapType.HYBRID }, modifier = Modifier.padding(2.dp)) {
-                    Text("Híbrido")
-                }
-                Button(onClick = { mapType = MapType.TERRAIN }, modifier = Modifier.padding(2.dp)) {
-                    Text("Terreno")
-                }
+                Button(onClick = { mapType = MapType.HYBRID }, modifier = Modifier.padding(2.dp)) { Text("Híbrido") }
+                Button(onClick = { mapType = MapType.TERRAIN }, modifier = Modifier.padding(2.dp)) { Text("Terreno") }
             }
         }
     }
