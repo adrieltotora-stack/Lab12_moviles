@@ -30,15 +30,40 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.unit.dp
 import com.google.maps.android.compose.Polyline
 
+import android.content.Context
+import android.graphics.Bitmap
+import androidx.core.content.ContextCompat
+import com.google.android.gms.maps.model.BitmapDescriptor
+import androidx.compose.ui.platform.LocalContext
+
+fun bitmapDescriptorFromVector(context: Context, vectorResId: Int): BitmapDescriptor? {
+    return ContextCompat.getDrawable(context, vectorResId)?.run {
+        setBounds(0, 0, intrinsicWidth, intrinsicHeight)
+        val bitmap = Bitmap.createBitmap(intrinsicWidth, intrinsicHeight, Bitmap.Config.ARGB_8888)
+        draw(android.graphics.Canvas(bitmap))
+        BitmapDescriptorFactory.fromBitmap(bitmap)
+    }
+}
+
+fun bitmapDescriptorFromImage(context: Context, resId: Int, width: Int, height: Int): BitmapDescriptor? {
+    val drawable = ContextCompat.getDrawable(context, resId) ?: return null
+    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+    val canvas = android.graphics.Canvas(bitmap)
+    drawable.setBounds(0, 0, width, height)
+    drawable.draw(canvas)
+    return BitmapDescriptorFactory.fromBitmap(bitmap)
+}
+
 @Composable
 fun MapScreen() {
+    val context = LocalContext.current
     val ArequipaLocation = LatLng(-16.4040102, -71.559611) // Arequipa, Perú
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(ArequipaLocation, 12f)
     }
 
     var mapType by remember { mutableStateOf(MapType.NORMAL) }
-    
+
     LaunchedEffect(Unit) {
         cameraPositionState.animate(
             update = CameraUpdateFactory.newLatLngZoom(LatLng(-16.2520984, -71.6836503), 12f),
@@ -91,7 +116,7 @@ fun MapScreen() {
 
             Marker(
                 state = rememberMarkerState(position = ArequipaLocation),
-                icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE),
+                icon = bitmapDescriptorFromImage(context, R.drawable.arequipa_escudo, 150, 150),
                 title = "Arequipa, Perú"
             )
 
