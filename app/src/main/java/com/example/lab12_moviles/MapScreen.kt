@@ -41,6 +41,14 @@ import com.google.android.gms.maps.model.Dash
 import com.google.android.gms.maps.model.Gap
 import com.google.android.gms.maps.model.Dot
 
+import androidx.compose.material3.TextField
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import android.location.Geocoder
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.ui.graphics.Color as ComposeColor
+
 fun bitmapDescriptorFromImage(context: Context, resId: Int, width: Int, height: Int): BitmapDescriptor? {
     val drawable = ContextCompat.getDrawable(context, resId) ?: return null
     val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
@@ -53,6 +61,9 @@ fun bitmapDescriptorFromImage(context: Context, resId: Int, width: Int, height: 
 @Composable
 fun MapScreen() {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var searchQuery by remember { mutableStateOf("") }
+    
     val ArequipaLocation = LatLng(-16.4040102, -71.559611)
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(ArequipaLocation, 12f)
@@ -119,6 +130,49 @@ fun MapScreen() {
                 width = 5f,
                 pattern = pattern
             )
+        }
+
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .align(androidx.compose.ui.Alignment.TopCenter)
+                .fillMaxWidth()
+        ) {
+            TextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                label = { Text("Buscar lugar...") },
+                modifier = Modifier.fillMaxWidth(),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = ComposeColor.White.copy(alpha = 0.9f),
+                    unfocusedContainerColor = ComposeColor.White.copy(alpha = 0.8f)
+                )
+            )
+            Button(
+                onClick = {
+                    if (searchQuery.isNotEmpty()) {
+                        scope.launch {
+                            try {
+                                val geocoder = Geocoder(context)
+                                val addresses = geocoder.getFromLocationName(searchQuery, 1)
+                                if (addresses != null && addresses.isNotEmpty()) {
+                                    val address = addresses[0]
+                                    val newLocation = LatLng(address.latitude, address.longitude)
+                                    cameraPositionState.animate(
+                                        update = CameraUpdateFactory.newLatLngZoom(newLocation, 15f),
+                                        durationMs = 2000
+                                    )
+                                }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                        }
+                    }
+                },
+                modifier = Modifier.padding(top = 8.dp).align(androidx.compose.ui.Alignment.End)
+            ) {
+                Text("Buscar")
+            }
         }
 
         Column(
