@@ -29,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.unit.dp
 import com.google.maps.android.compose.Polyline
+import androidx.compose.foundation.layout.PaddingValues
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -93,7 +94,8 @@ fun MapScreen() {
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = cameraPositionState,
             properties = MapProperties(mapType = mapType, isMyLocationEnabled = true),
-            uiSettings = MapUiSettings(myLocationButtonEnabled = true)
+            uiSettings = MapUiSettings(myLocationButtonEnabled = true),
+            contentPadding = PaddingValues(top = 550.dp)
         ) {
             Marker(
                 state = rememberMarkerState(position = ArequipaLocation),
@@ -119,7 +121,11 @@ fun MapScreen() {
             )
         }
 
-        Column(modifier = Modifier.padding(16.dp).align(androidx.compose.ui.Alignment.TopStart)) {
+        Column(
+            modifier = Modifier
+                .padding(bottom = 32.dp, start = 16.dp)
+                .align(androidx.compose.ui.Alignment.BottomStart)
+        ) {
             Row {
                 Button(onClick = { mapType = MapType.NORMAL }, modifier = Modifier.padding(2.dp)) { Text("Normal") }
                 Button(onClick = { mapType = MapType.SATELLITE }, modifier = Modifier.padding(2.dp)) { Text("Satélite") }
